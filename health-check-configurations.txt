@@ -164,4 +164,5 @@ def lambda_handler(event, context):
             'body': json.dumps(f'Error: {str(e)}')
         }
 
-
+AKIAVS22QW4AEJ4OHFBV
+WnPrwtNCNVP6YnNb6rCqsjLscEN0E2EA8b7tJQ1l
