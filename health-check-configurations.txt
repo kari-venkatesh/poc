@@ -166,3 +166,7 @@ def lambda_handler(event, context):
 
 AKIAVS22QW4AEJ4OHFBV
 WnPrwtNCNVP6YnNb6rCqsjLscEN0E2EA8b7tJQ1l
+
+
+jadhavashu681@gmail.com
+M@bcda77_1998
