@@ -1,0 +1,247 @@
+ AWS Cost Explorer is a tool provided by Amazon Web Services (AWS) that allows users to analyze their AWS spending and usage. It provides a range of features for visualizing, understanding, and managing AWS costs and usage.
+
+Cost Explorer works by gathering and aggregating data from the user's AWS account, organizing it into different views, and presenting it in ways that make it easy to understand. Users can explore their costs and usage patterns over time, analyze spending across different AWS services, and identify cost-saving opportunities.
+
+The tool offers various built-in options for generating cost and usage reports, filtering data by different dimensions such as service, instance type, region, and more. Additionally, it provides forecasting capabilities to estimate future spending based on historical data.
+
+Overall, AWS Cost Explorer is designed to give users greater visibility into their AWS spending, enabling them to make more informed decisions and optimize their usage to control costs effectively.  
+
+ In Amazon Web Services (AWS), SNS stands for Simple Notification Service. It is a fully managed messaging service that allows you to send messages or notifications to a large number of recipients, including distributed systems and services. SNS follows a "push" mechanism, meaning that it delivers messages to subscribers in real time.
+
+Here's how it works:
+
+1. **Topics:** With SNS, you create a "topic" which is a communication channel to which you can publish messages. Subscribers can then receive notifications from these topics.
+
+2. **Publishers:** Publishers can send messages to these topics using the SNS API or the AWS Management Console. These messages can be in various formats such as text, JSON, or even platform-specific (e.g., for sending push notifications to mobile devices).
+
+3. **Subscribers:** Subscribers can be various types of endpoints, such as HTTP/S, email, SMS, Lambda functions, SQS queues, mobile devices, and more. These subscribers receive the messages published to the topic they are subscribed to.
+
+4. **Filtering:** SNS allows you to filter messages based on the attributes of the message. This feature enables subscribers to receive only the messages they are interested in.
+
+5. **Message Delivery:** Messages are delivered to all applicable, subscribed endpoints for a given topic.
+
+Overall, SNS simplifies the message and notification delivery process by allowing you to decouple the message sending from message receiving systems. It provides a reliable, scalable, and cost-effective infrastructure for sending messages quickly, over multiple transport protocols. 
+
+ Amazon EventBridge is a serverless event bus service provided by Amazon Web Services (AWS). It enables you to easily connect different AWS services, SaaS applications, and your own applications using data from events. EventBridge simplifies the process of building event-driven architectures by allowing you to create rules that match incoming events and take actions in response to those events.
+
+Key features of Amazon EventBridge include:
+
+1. **Event Bus**: EventBridge provides a central event bus that collects and distributes events from various sources. This allows you to build decoupled, scalable, and resilient event-driven architectures.
+
+2. **Event Patterns**: You can define rules and event patterns to match incoming events based on different criteria such as event source, event type, and event content. When a matching event occurs, EventBridge takes the defined action, such as invoking a Lambda function or triggering a step function.
+
+3. **Integration**: EventBridge seamlessly integrates with a wide range of AWS services, including AWS SaaS services, custom applications, and third-party SaaS providers through partner event buses.
+
+4. **Schema Registry**: EventBridge includes a schema registry that allows you to define the structure of events in a central location. This enables better understanding and governance of the event data.
+
+5. **Security and Monitoring**: It provides security features such as encryption, access control, and audit logging. Additionally, EventBridge integrates with AWS CloudWatch for monitoring and logging of events and rule activity.
+
+Overall, Amazon EventBridge simplifies the creation of event-driven architectures by providing a scalable, reliable, and easy-to-use event bus that allows you to build innovative applications with minimal infrastructure management.  
+
+import datetime
+import os
+import datetime as dt
+
+import boto3
+from dateutil import relativedelta
+
+
+def lambda_handler(event, context):
+    def daily_bill(start, end):
+        response = client.get_cost_and_usage(
+            TimePeriod={"Start": start, "End": end},
+            Granularity="DAILY",
+            Metrics=["UnblendedCost"],
+        )
+        amount = response["ResultsByTime"][0]["Total"]["UnblendedCost"]["Amount"]
+        output = "%.3f" % float(amount)
+
+        return str(output)
+
+    # this_month = datetime.datetime.today()
+    # next_month = this_month + relativedelta.relativedelta(weeks=1)
+
+    # this_month_1st = this_month.strftime("%Y-%m-01")
+    # next_month_1st = next_month.strftime("%Y-%m-01")
+    today_datetime = dt.datetime.today()
+    yesterday_datetime = today_datetime + dt.timedelta(days=-1)
+
+    today = today_datetime.strftime("%Y-%m-%d")
+    yesterday = yesterday_datetime.strftime("%Y-%m-%d")
+
+    client = boto3.client("ce")
+    yesterday_bill = daily_bill(yesterday,today)
+    # msg = "This month bill (USD): " + this_month_bill
+    msg = f"Bill for {yesterday} $: {yesterday_bill}"
+
+    client = boto3.client('sns')
+    arn = os.environ['SNS_ARN']
+    subject = f"AWS Bill for sample Project {yesterday}"
+
+    response = client.publish(
+      TopicArn=arn,
+      Message=msg,
+      Subject=subject,
+    )
+
+    return {"statusCode": 200, "body": msg}
+
+This Python code appears to be a AWS Lambda function meant to fetch the cost and usage details using the AWS Cost Explorer (CE) and then publish that data to an SNS (Simple Notification Service) topic.
+
+Here's a breakdown of what the code does:
+
+1. It imports necessary Python libraries including `datetime`, `os`, `boto3` (the AWS SDK for Python), and `relativedelta` from `dateutil`.
+
+2. It defines a `lambda_handler` function, which is the entry point for the AWS Lambda function. When triggered, this function will execute the code inside it.
+
+3. Inside the `lambda_handler` function, there's another function called `daily_bill` which takes the start and end date as input and then uses the `boto3` client for Cost Explorer to fetch the "UnblendedCost" for the specified time period. This function returns the cost as a string.
+
+4. The code then calculates the `today_datetime` and `yesterday_datetime`, and formats them to strings in the format `"%Y-%m-%d"`.
+
+5. It creates a `boto3` client for Cost Explorer and invokes the `daily_bill` function to get yesterday's bill amount.
+
+6. It then constructs a message (`msg`) to be sent through SNS and uses the `boto3` client for SNS to publish the message to the SNS topic subscribed.
+
+7. Finally, the function returns an HTTP 200 status code along with the message `msg` as the response body.
+
+It's worth noting that the code seems to be designed to operate within an AWS Lambda environment, where environmental variables such as `SNS_ARN` are expected to be configured in the Lambda environment.
+
+Overall, the purpose of this code seems to be to automate the process of fetching yesterday's AWS cost using Cost Explorer and sending that information as a message via SNS to a specified topic.   
+
+
+#!/bin/bash
+
+BUCKET_NAME="awshc1"
+PREFIX="documents"
+BACKUP_NAME="${PREFIX}/Preprod-Health-check-file-$(date +%Y-%m-%d).txt"
+
+# Run the shell script to generate the logfile
+sh /home/ec2-user/sample1.sh  > Preprod-Health-check-file-$(date +%Y-%m-%d).txt
+
+# Upload the backup to S3
+aws s3 cp /home/ec2-user/Preprod-Health-check-file-$(date +%Y-%m-%d).txt s3://${BUCKET_NAME}/${BACKUP_NAME}
+
+ This script seems to be a shell script designed to automate the process of creating a log file and uploading it to an AWS S3 bucket. Let's break down the script step by step:
+
+1. `#!/bin/bash`: This line is called a shebang and it indicates that the script should be executed using the Bash shell.
+
+2. `BUCKET_NAME="awshc1"`: This line sets a variable named BUCKET_NAME with the value "awshc1", which likely represents the name of the AWS S3 bucket 
+    where the log file will be uploaded.
+
+3. `PREFIX="documents"`: Here, the script sets another variable named PREFIX with the value "documents". This could be a prefix used to organize the files within the S3 bucket.
+
+4. `BACKUP_NAME="${PREFIX}/Preprod-Health-check-file-$(date +%Y-%m-%d).txt"`: This line constructs the name of the log file that will be created. 
+   It uses the value of PREFIX and appends it to "Preprod-Health-check-file-" followed by the current date in the format YYYY-MM-DD and the extension .txt. 
+   For example, if today's date were January 1, 2023, the log file name would be "documents/Preprod-Health-check-file-2023-01-01.txt".
+
+5. `sh /home/ec2-user/sample1.sh  > Preprod-Health-check-file-$(date +%Y-%m-%d).txt`: 
+   This line seems to execute another shell script named sample1.sh located in the /home/ec2-user directory and redirects its output to a log file with a name 
+   based on the current date using the same format as before.
+
+6. `aws s3 cp /home/ec2-user/Preprod-Health-check-file-$(date +%Y-%m-%d).txt s3://${BUCKET_NAME}/${BACKUP_NAME}`: 
+   This line uses the AWS Command Line Interface (AWS CLI) to copy the created log file to the specified S3 bucket. It references the log file created in the previous step 
+   and uses the BUCKET_NAME and BACKUP_NAME variables to specify the destination in the S3 bucket.
+
+In summary, this script first creates a log file by executing another script, and then it uploads the created log file to an S3 bucket using the AWS CLI.  
+
+
+import boto3
+import os
+import json
+from datetime import datetime
+from botocore.exceptions import NoCredentialsError
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+
+def lambda_handler(event, context):
+    # AWS SES Configuration
+    sender_email = "venkyroyal66@gmail.com"
+    recipient_emails = ["pokalasivanagaraju72@gmail.com"]
+    cc_recipients = ["venkyroyal66@gmail.com"]
+    bcc_recipients = ["venkyroyal66@gmail.com"]
+    aws_region = "us-east-1"
+
+    # S3 Configuration
+    s3_bucket = "awshc1"
+    s3_prefix = "documents/"
+
+    try:
+        # Initialize SES client
+        ses = boto3.client('ses', region_name=aws_region)
+
+        # Initialize S3 client
+        s3 = boto3.client('s3')
+
+        # List objects in the S3 bucket, sorted by last modified timestamp
+        response = s3.list_objects_v2(Bucket=s3_bucket, Prefix=s3_prefix)
+        objects = response.get('Contents', [])
+        if objects:
+            # Sort the objects by last modified timestamp in descending order
+            objects.sort(key=lambda x: x['LastModified'], reverse=True)
+            latest_object = objects[0]  # Get the latest object
+
+            # Compose the email
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = ', '.join(recipient_emails)  # Join recipient emails with a comma and space
+            msg['Cc'] = ', '.join(cc_recipients)
+            msg['Bcc'] = ', '.join(bcc_recipients)
+
+            msg['Subject'] = "Health Check For Mulesoft Non-prod"
+
+            # Add a text body with line breaks
+            text = "Hi all,\n\nPlease find the attached output file generated below."
+            msg.attach(MIMEText(text, 'plain'))
+
+            # Attach the latest S3 object as an attachment
+            obj_key = latest_object['Key']
+            obj_data = s3.get_object(Bucket=s3_bucket, Key=obj_key)['Body'].read()
+            attachment = MIMEApplication(obj_data)
+            attachment.add_header('Content-Disposition', 'attachment', filename=obj_key)
+            msg.attach(attachment)
+
+            # Send the email
+            ses.send_raw_email(Source=sender_email, Destinations=recipient_emails + cc_recipients + bcc_recipients, RawMessage={'Data': msg.as_string()})
+
+            return {
+                'statusCode': 200,
+                'body': json.dumps('Email sent successfully')
+            }
+        else:
+            return {
+                'statusCode': 404,
+                'body': json.dumps('No objects found in S3 bucket')
+            }
+
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps(f'Error: {str(e)}')
+        }
+
+
+This Python code is a Lambda function designed to retrieve the latest file from an S3 bucket and send it as an email attachment using Amazon SES (Simple Email Service). Let's break down the code step by step:
+
+1. **Import Statements**: The code begins by importing necessary modules such as boto3 for AWS SDK, os for operating system dependent functionality, json for JSON encoding/decoding, datetime for manipulating dates and times, NoCredentialsError for identifying issues with AWS credentials, and smtplib and email library modules for sending emails.
+
+2. **lambda_handler Function**: This function is the entry point for the Lambda function.
+
+3. **AWS SES Configuration**: Several variables are defined to store AWS SES configuration information such as sender's email, recipient emails, AWS region, and other recipient email lists such as CC and BCC.
+
+4. **S3 Configuration**: Variables for S3 bucket and prefix are defined to specify the location from which the latest file will be retrieved.
+
+5. **Try-Except Block**: The main code is enclosed within a try-except block to catch and handle any exceptions that might occur during the execution.
+
+6. **SES and S3 Client Initialization**: The code initializes boto3 clients for SES and S3 services.
+
+7. **List Objects in S3 Bucket**: It lists objects in the specified S3 bucket and sorts them by the last modified timestamp, then retrieves the latest object.
+
+8. **Compose the Email**: It composes an email using the MIMEText and MIMEMultipart modules. It sets the sender, recipients, subject, and body of the email. Then, it attaches the latest S3 object as an attachment to the email.
+
+9. **Send the Email**: The code sends the email using the ses.send_raw_email method with the composed message as the raw email.
+
+10. **Return Statements**: The Lambda function returns a JSON response indicating the status of the email sending process or any errors encountered.
+
+In summary, this code retrieves the latest file from an S3 bucket, composes an email with the file as an attachment, and sends the email using Amazon SES, while handling any potential errors that may arise during the process.  
