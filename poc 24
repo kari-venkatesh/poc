@@ -245,3 +245,6 @@ This Python code is a Lambda function designed to retrieve the latest file from 
 10. **Return Statements**: The Lambda function returns a JSON response indicating the status of the email sending process or any errors encountered.
 
 In summary, this code retrieves the latest file from an S3 bucket, composes an email with the file as an attachment, and sends the email using Amazon SES, while handling any potential errors that may arise during the process.  
+
+jadhavashu681@gmail.com
+M@bcda77_1998
