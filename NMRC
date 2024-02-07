@@ -1,0 +1,30 @@
+Hello,
+ 
+Thank you for reaching out to AWS Support. My name is Nimesh and I am from the Containers team in Support Engineering. I will be assisting you with your case.
+ 
+Based on the information provided in the case notes, it seems you are inquiring about node_memory_reserved_capacity container insight metrics and you have questions related to that. The Formula for the node_memory_reserved_capacity is calculated as node_memory_request / node_memory_limit . Where the node_memory_request formula is sum(pod_memory_request) [1]. Based on this, below I will address the questions that you have raised.
+
+Q #1
+Recently there have been fresh application deployments, so is this caused due limits & requests set for the Apps Pod
+
+Given the formula, if a deployment introduces pods with high memory requests, it can increase the node_memory_request portion of the formula, thereby increasing the node_memory_reserved_capacity metrics.
+
+Q #2
+What are the possible considerations for troubleshoot the cause of this high usage.
+
+To troubleshoot such issues, analysing POD and Node metrics is beneficial. AWS container insights and Metrics server can be utilised to understand the memory utilisation pattern. It is also advisable to review the application and Kubernetes logs for insights into memory related usage and potential errors. Please find the EKS best practise guide on observability here: https://aws.github.io/aws-eks-best-practices/reliability/docs/application/#observability  
+
+
+Q#3
+If this is caused due to crunch of memory due to App Pods, What suggestions should the Infra Teams (K8s Admin Team) & AO Team consider.
+
+The strategy to emphasise on accurately configuring memory requests and limits for pods and ensuring the cluster has sufficient resources to handle the workload. Reserving resources for system and Kubernetes daemons and implementing QoS can also be considered. For detailed guidelines on the reliability of the EKS data plane, refer to the details here: https://aws.github.io/aws-eks-best-practices/reliability/docs/dataplane/  
+
+For detailed guidelines on the scalability of the EKS data plane, refer to the details here:: https://aws.github.io/aws-eks-best-practices/scalability/docs/data-plane/  
+
+Overall, these EKS best practise guide on GitHub provide a comprehensive set of recommendations for optimising Amazon EKS operations beyond initial deployment.
+
+I hope this information proves useful. If you have any questions, please let me know.
+
+
+We value your feedback. Please share your experience by rating this and other correspondences in the AWS Support Center. You can rate a correspondence by selecting the stars in the top right corner of the correspondence.
