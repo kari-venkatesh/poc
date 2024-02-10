@@ -38,6 +38,100 @@ Pod without Running status	Green	Green
 Cronjobs	Green	Green
 Job	Green	Green
 Resource Utilization(Memory and CPU)	Green	Green
+
+import boto3
+import os
+import json
+from datetime import datetime
+from botocore.exceptions import NoCredentialsError
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+
+def lambda_handler(event, context):
+    # AWS SES Configuration
+    sender_email = "venkyroyal66@gmail.com"
+    recipient_emails = ["venkyroyal66@gmail.com"]
+    cc_recipients = ["venkyroyal66@gmail.com"]
+    bcc_recipients = ["venkyroyal66@gmail.com"]
+    aws_region = "us-east-1"
+
+    # S3 Configuration
+    s3_bucket = "awshc1"
+    s3_prefix = "documents/"
+
+    try:
+        # Initialize SES client
+        ses = boto3.client('ses', region_name=aws_region)
+
+        # Initialize S3 client
+        s3 = boto3.client('s3')
+
+        # List objects in the S3 bucket, sorted by last modified timestamp
+        response = s3.list_objects_v2(Bucket=s3_bucket, Prefix=s3_prefix)
+        objects = response.get('Contents', [])
+        if objects:
+            # Sort the objects by last modified timestamp in descending order
+            objects.sort(key=lambda x: x['LastModified'], reverse=True)
+            latest_object = objects[0]  # Get the latest object
+
+            # Compose the email
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = ', '.join(recipient_emails)  # Join recipient emails with a comma and space
+            msg['Cc'] = ', '.join(cc_recipients)
+            msg['Bcc'] = ', '.join(bcc_recipients)
+            msg['Subject'] = "Health Check For Mulesoft Non-prod"
+
+            # Add a text body with line breaks
+            text = "Hi all,\n\nPlease find the attached output file generated below.\n\n"
+
+            # Add the table data to the email
+            table_data = """
+            Monitoring Tasks             PRE_PROD    PROD
+            Node Count                   20          14
+            Total Pod Count              569         364
+            Application Pods Count       447         258
+            Total Ingress count          469         144
+            Problematic Pod 0/1          Green       Green
+            Problematic Pod 1/2          Green       Green
+            Events except Normal         Green       Green
+            Pod without Running status   Green       Green
+            Cronjobs                     Green       Green
+            Job                          Green       Green
+            Resource Utilization(Memory and CPU)    Green       Green
+            """
+
+            text += table_data  # Add the table to the email body
+            msg.attach(MIMEText(text, 'plain'))
+
+            # Attach the latest S3 object as an attachment
+            obj_key = latest_object['Key']
+            obj_data = s3.get_object(Bucket=s3_bucket, Key=obj_key)['Body'].read()
+            attachment = MIMEApplication(obj_data)
+            attachment.add_header('Content-Disposition', 'attachment', filename=obj_key)
+            msg.attach(attachment)
+
+            # Send the email
+            ses.send_raw_email(Source=sender_email, Destinations=recipient_emails + cc_recipients + bcc_recipients, RawMessage={'Data': msg.as_string()})
+
+            return {
+                'statusCode': 200,
+                'body': json.dumps('Email sent successfully')
+            }
+        else:
+            return {
+                'statusCode': 404,
+                'body': json.dumps('No objects found in S3 bucket')
+            }
+
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps(f'Error: {str(e)}')
+        }
+
 		
 
 
