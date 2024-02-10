@@ -26,5 +26,20 @@ Overall, these EKS best practise guide on GitHub provide a comprehensive set of 
 
 I hope this information proves useful. If you have any questions, please let me know.
 
+Monitoring Tasks	PRE_PROD	PROD
+Node Count	20	14
+Total Pod Count	569	364
+Application Pods Count 	447	258
+Total Ingress count	469	144
+Problematic Pod 0/1	Green	Green
+Problematic Pod 1/2	Green	Green
+Events except Normal	Green	Green
+Pod without Running status	Green	Green
+Cronjobs	Green	Green
+Job	Green	Green
+Resource Utilization(Memory and CPU)	Green	Green
+		
+
+
 
 We value your feedback. Please share your experience by rating this and other correspondences in the AWS Support Center. You can rate a correspondence by selecting the stars in the top right corner of the correspondence.
